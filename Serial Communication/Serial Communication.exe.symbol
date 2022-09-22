@@ -1,0 +1,52 @@
+< THE SYMBOL TABLE >  Serial Communication.exe  --  emu8086 assembler version: 4.08 
+===================================================================================================
+Name                     	Offset    	Size      	Type      	Segment   
+===================================================================================================
+STACK                    	00000     	-5        	SEGMENT   	(ITSELF)  
+DATA                     	00007     	-5        	SEGMENT   	(ITSELF)  
+WELCOME                  	00000     	1         	VAR       	DATA      
+CTRL                     	0001F     	1         	VAR       	DATA      
+TRANSMIT                 	0003B     	1         	VAR       	DATA      
+RECEIVE                  	00057     	1         	VAR       	DATA      
+TRANSCEIVE               	00071     	1         	VAR       	DATA      
+LEAVE                    	00098     	1         	VAR       	DATA      
+STR                      	000AE     	1         	VAR       	DATA      
+CODE                     	00014     	-5        	SEGMENT   	(ITSELF)  
+MAIN                     	00000     	-1        	LABEL     	CODE      
+HERE                     	000D1     	-1        	LABEL     	CODE      
+START                    	000D3     	-1        	LABEL     	CODE      
+TRANSMIT_SOUND           	000EC     	-1        	LABEL     	CODE      
+LP0                      	00104     	-1        	LABEL     	CODE      
+TS0                      	00107     	-1        	LABEL     	CODE      
+TS1                      	00114     	-1        	LABEL     	CODE      
+RECEIVE_SOUND            	00121     	-1        	LABEL     	CODE      
+RP                       	00140     	-1        	LABEL     	CODE      
+TRANSCEIVE_SOUND         	00150     	-1        	LABEL     	CODE      
+LP1                      	0016F     	-1        	LABEL     	CODE      
+STOP                     	0018A     	-1        	LABEL     	CODE      
+TIMER_SETUP_1            	001B9     	-1        	NEAR      	CODE      
+TIMER_SETUP_2            	001C6     	-1        	NEAR      	CODE      
+TIMER_SETUP_3            	001D3     	-1        	NEAR      	CODE      
+TIMER_SETUP_4            	001E0     	-1        	NEAR      	CODE      
+TIMER_SETUP_5            	001ED     	-1        	NEAR      	CODE      
+CHECK_TXRDY              	001FA     	-1        	NEAR      	CODE      
+L-1                      	001FF     	-1        	LABEL     	CODE      
+CHECK_RXRDY              	00207     	-1        	NEAR      	CODE      
+L_1                      	0020C     	-1        	LABEL     	CODE      
+SEND_CHARACTER           	00214     	-1        	NEAR      	CODE      
+RECEIVE_CHARACTER        	0021B     	-1        	NEAR      	CODE      
+WAIT_A_LITTLE            	0022A     	-1        	NEAR      	CODE      
+LOOP1                    	0022E     	-1        	LABEL     	CODE      
+DELAY_S                  	00233     	-1        	NEAR      	CODE      
+LOOP_1                   	00237     	-1        	LABEL     	CODE      
+LOOP_2                   	0023B     	-1        	LABEL     	CODE      
+LCDINIT                  	00243     	-1        	NEAR      	CODE      
+PRINTCHAR                	00292     	-1        	NEAR      	CODE      
+PRINTSTRING              	002C8     	-1        	NEAR      	CODE      
+PRINTSTR                 	002C8     	-1        	LABEL     	CODE      
+ENDPRINT                 	002D5     	-1        	LABEL     	CODE      
+DELAY                    	002D6     	-1        	NEAR      	CODE      
+===================================================================================================
+[ 12/20/2021  --  3:39:23 PM ] 
+< END >
+ 
