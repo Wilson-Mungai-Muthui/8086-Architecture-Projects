@@ -1,0 +1,1094 @@
+EMU8086 GENERATED LISTING. MACHINE CODE <- SOURCE.
+ 
+Servo Controller.exe -- emu8086 assembler version: 4.08  
+ 
+[ 1/3/2022  --  9:20:18 AM ] 
+ 
+===================================================================================================
+[LINE]     LOC: MACHINE CODE                          SOURCE
+===================================================================================================
+ 
+[   1]        :                                       ORG 0000H
+[   2]        :                                       
+[   3]        :                                       .MODEL SMALL
+[   4]        :                                       .STACK 100
+[   5]        :                                       
+[   6]        :                                       
+[   7]        :                                       DATA SEGMENT
+[   8]        :                                       
+[   9]        :                                       CONT1  EQU 0010H        ;8259:A0=0
+[  10]        :                                       CONT2  EQU 0012H        ;8259:A0=1
+[  11]        :                                       ICW1   EQU 00010111B    ;INITIALIZATION CONTROL WORD 1
+[  12]        :                                       ICW2   EQU 40H          ;INITIALIZATION CONTROL WORD 2
+[  13]        :                                       ICW4   EQU 00000011B    ;INITIALIZATION CONTROL WORD 4
+[  14]        :                                       OCW1   EQU 00000000B    ;OPERATION CONTROL WORD 1
+[  15]        :                                       TCWR3  EQU 01110110B    ;8253 MODE 3 OPERATION
+[  16]        :                                       TCWR0  EQU 01110000B    ;8253 MODE 0 OPERATION
+[  17]        :                                       
+[  18]        :                                       ;PORT ADDRESSES
+[  19]        :                                       ;1ST 8255
+[  20]        :                                       PORTA1 EQU 0030H
+[  21]        :                                       PORTB1 EQU 0032H
+[  22]        :                                       PORTC1 EQU 0034H
+[  23]        :                                       PCW1   EQU 0036H
+[  24]        :                                       
+[  25]        :                                       ;2ND 8255
+[  26]        :                                       PORTA2 EQU 0050H
+[  27]        :                                       PORTB2 EQU 0052H
+[  28]        :                                       PORTC2 EQU 0054H
+[  29]        :                                       PCW2   EQU 0056H
+[  30]        :                                       
+[  31]        :                                       ;8253
+[  32]        :                                       TM0    EQU 0070H
+[  33]        :                                       TM1    EQU 0072H
+[  34]        :                                       TM2    EQU 0074H
+[  35]        :                                       TMCTR  EQU 0076H
+[  36]        :                                       
+[  37]        :                                       ;DATA STRINGS
+[  38]    0070: 57 45 4C 43 4F 4D 45 20 54 4F 20 53   WELCOME     DB  "WELCOME TO SERVO MOTOR CONTROL$"
+                45 52 56 4F 20 4D 4F 54 4F 52 20 43 
+                4F 4E 54 52 4F 4C 24                
+[  39]    008F: 50 52 45 53 53 20 49 4E 50 55 54 20   CTRL        DB  "PRESS INPUT FOR CONFIGURATION$"
+                46 4F 52 20 43 4F 4E 46 49 47 55 52 
+                41 54 49 4F 4E 24                   
+[  40]    00AD: 50 52 45 53 53 20 31 20 46 4F 52 20   STR_ONE     DB  "PRESS 1 FOR -90 DEGREES$"
+                2D 39 30 20 44 45 47 52 45 45 53 24 
+                                                    
+[  41]    00C5: 50 52 45 53 53 20 32 20 46 4F 52 20   STR_TWO     DB  "PRESS 2 FOR -45 DEGREES$"
+                2D 34 35 20 44 45 47 52 45 45 53 24 
+                                                    
+[  42]    00DD: 50 52 45 53 53 20 33 20 46 4F 52 20   STR_THREE   DB  "PRESS 3 FOR   0 DEGREES$"
+                20 20 30 20 44 45 47 52 45 45 53 24 
+                                                    
+[  43]    00F5: 50 52 45 53 53 20 34 20 46 4F 52 20   STR_FOUR    DB  "PRESS 4 FOR +45 DEGREES$"
+                2B 34 35 20 44 45 47 52 45 45 53 24 
+                                                    
+[  44]    010D: 50 52 45 53 53 20 35 20 46 4F 52 20   STR_FIVE    DB  "PRESS 5 FOR +90 DEGREES$"
+                2B 39 30 20 44 45 47 52 45 45 53 24 
+                                                    
+[  45]    0125: 57 41 49 54 49 4E 47 20 46 4F 52 20   NORMAL      DB  "WAITING FOR KEY PRESS$"
+                4B 45 59 20 50 52 45 53 53 24       
+[  46]    013B: 53 45 52 56 4F 20 4D 4F 54 4F 52 20   INTERRUPT   DB  "SERVO MOTOR CONTROL COMPLETE$"
+                43 4F 4E 54 52 4F 4C 20 43 4F 4D 50 
+                4C 45 54 45 24                      
+[  47]    0158: 42 59 20 45 45 45 32 34 31 32 20 45   STR         DB  "BY EEE2412 EEE LC GROUP 3$"
+                45 45 20 4C 43 20 47 52 4F 55 50 20 
+                33 24                               
+[  48]        :                                       
+[  49]        :                                       ;UNDEFINED VARIABLE
+[  50]    0172: 00                                    KEY         DB   ?
+[  51]        :                                       
+[  52]        :                                       ;DATA STRINGS
+[  53]    0173: 2B 39 30 2E 30 20 44 45 47 52 45 45   OPTION_ONE     DB  "+90.0 DEGREES OUTPUT$"
+                53 20 4F 55 54 50 55 54 24          
+[  54]    0188: 2B 34 35 2E 30 20 44 45 47 52 45 45   OPTION_TWO     DB  "+45.0 DEGREES OUTPUT$"
+                53 20 4F 55 54 50 55 54 24          
+[  55]    019D: 20 20 30 2E 30 20 44 45 47 52 45 45   OPTION_THREE   DB  "  0.0 DEGREES OUTPUT$"
+                53 20 4F 55 54 50 55 54 24          
+[  56]    01B2: 2D 34 35 2E 30 20 44 45 47 52 45 45   OPTION_FOUR    DB  "-45.0 DEGREES OUTPUT$"
+                53 20 4F 55 54 50 55 54 24          
+[  57]    01C7: 2D 39 30 2E 30 20 44 45 47 52 45 45   OPTION_FIVE    DB  "-90.0 DEGREES OUTPUT$"
+                53 20 4F 55 54 50 55 54 24          
+[  58]        :                                       
+[  59]        :                                       DATA ENDS
+[  60]        :                                       
+[  61]        :                                       CODE SEGMENT
+[  62]        :                                       
+[  63]    01E0:                                       MAIN:
+[  64]        :                                       
+[  65]        :                                       ;INITIALIZATION OF SEGMENTS
+[  66]    01E0: B8 07 00                              MOV AX, @DATA
+[  67]    01E3: 8E D8                                 MOV DS, AX
+[  68]    01E5: 8E C0                                 MOV ES, AX
+[  69]        :                                       
+[  70]        :                                       ;--------------------------------------------------;
+[  71]        :                                       ;                                                  ;
+[  72]        :                                       ;              INTERRUPT SETUP                     ;
+[  73]        :                                       ;                                                  ;
+[  74]        :                                       ;--------------------------------------------------;
+[  75]        :                                       
+[  76]    01E7: FA                                    CLI
+[  77]        :                                       
+[  78]    01E8: BA 10 00                              MOV DX, CONT1
+[  79]    01EB: B0 17                                 MOV AL, ICW1
+[  80]    01ED: EE                                    OUT DX, AL
+[  81]    01EE: BA 12 00                              MOV DX, CONT2
+[  82]    01F1: B0 40                                 MOV AL, ICW2
+[  83]    01F3: EE                                    OUT DX, AL
+[  84]    01F4: B0 03                                 MOV AL, ICW4
+[  85]    01F6: EE                                    OUT DX, AL
+[  86]        :                                       
+[  87]        :                                       ;UNMASK INTERRUPTS
+[  88]    01F7: B0 00                                 MOV AL, OCW1
+[  89]    01F9: EE                                    OUT DX, AL
+[  90]        :                                       
+[  91]        :                                       ;INTERRUPT VECTOR ADDRESS SETUP
+[  92]    01FA: 33 C0                                 XOR AX, AX
+[  93]    01FC: 8E C0                                 MOV ES, AX
+[  94]    01FE: B0 40                                 MOV AL ,40H
+[  95]    0200: B4 04                                 MOV AH, 4
+[  96]    0202: F6 E4                                 MUL AH
+[  97]    0204: 8B D8                                 MOV BX, AX
+[  98]    0206: B8 63 04                              MOV AX, OFFSET STOP
+[  99]    0209: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 100]    020C: 43                                    INC BX
+[ 101]    020D: 43                                    INC BX
+[ 102]    020E: B8 1E 00                              MOV AX, SEG STOP
+[ 103]    0211: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 104]    0214: 33 C0                                 XOR AX, AX
+[ 105]        :                                       
+[ 106]        :                                       
+[ 107]    0216: 33 C0                                 XOR AX, AX
+[ 108]    0218: 8E C0                                 MOV ES, AX
+[ 109]    021A: B0 41                                 MOV AL ,41H
+[ 110]    021C: B4 04                                 MOV AH, 4
+[ 111]    021E: F6 E4                                 MUL AH
+[ 112]    0220: 8B D8                                 MOV BX, AX
+[ 113]    0222: B8 F4 03                              MOV AX, OFFSET INPUT
+[ 114]    0225: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 115]    0228: 43                                    INC BX
+[ 116]    0229: 43                                    INC BX
+[ 117]    022A: B8 1E 00                              MOV AX, SEG INPUT
+[ 118]    022D: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 119]    0230: 33 C0                                 XOR AX, AX
+[ 120]        :                                       
+[ 121]    0232: 33 C0                                 XOR AX, AX
+[ 122]    0234: 8E C0                                 MOV ES, AX
+[ 123]    0236: B0 42                                 MOV AL ,42H
+[ 124]    0238: B4 04                                 MOV AH, 4
+[ 125]    023A: F6 E4                                 MUL AH
+[ 126]    023C: 8B D8                                 MOV BX, AX
+[ 127]    023E: B8 D4 03                              MOV AX, OFFSET START
+[ 128]    0241: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 129]    0244: 43                                    INC BX
+[ 130]    0245: 43                                    INC BX
+[ 131]    0246: B8 1E 00                              MOV AX, SEG START
+[ 132]    0249: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 133]    024C: 33 C0                                 XOR AX, AX
+[ 134]        :                                       
+[ 135]    024E: 33 C0                                 XOR AX, AX
+[ 136]    0250: 8E C0                                 MOV ES, AX
+[ 137]    0252: B0 43                                 MOV AL ,43H
+[ 138]    0254: B4 04                                 MOV AH, 4
+[ 139]    0256: F6 E4                                 MUL AH
+[ 140]    0258: 8B D8                                 MOV BX, AX
+[ 141]    025A: B8 B1 02                              MOV AX, OFFSET ONE_MS
+[ 142]    025D: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 143]    0260: 43                                    INC BX
+[ 144]    0261: 43                                    INC BX
+[ 145]    0262: B8 1E 00                              MOV AX, SEG ONE_MS
+[ 146]    0265: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 147]    0268: 33 C0                                 XOR AX, AX
+[ 148]        :                                       
+[ 149]    026A: 33 C0                                 XOR AX, AX
+[ 150]    026C: 8E C0                                 MOV ES, AX
+[ 151]    026E: B0 44                                 MOV AL ,44H
+[ 152]    0270: B4 04                                 MOV AH, 4
+[ 153]    0272: F6 E4                                 MUL AH
+[ 154]    0274: 8B D8                                 MOV BX, AX
+[ 155]    0276: B8 E4 02                              MOV AX, OFFSET TWO_MS
+[ 156]    0279: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 157]    027C: 43                                    INC BX
+[ 158]    027D: 43                                    INC BX
+[ 159]    027E: B8 1E 00                              MOV AX, SEG TWO_MS
+[ 160]    0281: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 161]    0284: 33 C0                                 XOR AX, AX
+[ 162]        :                                       
+[ 163]    0286: 33 C0                                 XOR AX, AX
+[ 164]    0288: 8E C0                                 MOV ES, AX
+[ 165]    028A: B0 45                                 MOV AL ,45H
+[ 166]    028C: B4 04                                 MOV AH, 4
+[ 167]    028E: F6 E4                                 MUL AH
+[ 168]    0290: 8B D8                                 MOV BX, AX
+[ 169]    0292: B8 20 03                              MOV AX, OFFSET THREE_MS
+[ 170]    0295: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 171]    0298: 43                                    INC BX
+[ 172]    0299: 43                                    INC BX
+[ 173]    029A: B8 1E 00                              MOV AX, SEG THREE_MS
+[ 174]    029D: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 175]    02A0: 33 C0                                 XOR AX, AX
+[ 176]        :                                       
+[ 177]    02A2: 33 C0                                 XOR AX, AX
+[ 178]    02A4: 8E C0                                 MOV ES, AX
+[ 179]    02A6: B0 46                                 MOV AL ,46H
+[ 180]    02A8: B4 04                                 MOV AH, 4
+[ 181]    02AA: F6 E4                                 MUL AH
+[ 182]    02AC: 8B D8                                 MOV BX, AX
+[ 183]    02AE: B8 5C 03                              MOV AX, OFFSET FOUR_MS
+[ 184]    02B1: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 185]    02B4: 43                                    INC BX
+[ 186]    02B5: 43                                    INC BX
+[ 187]    02B6: B8 1E 00                              MOV AX, SEG FOUR_MS
+[ 188]    02B9: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 189]    02BC: 33 C0                                 XOR AX, AX
+[ 190]        :                                       
+[ 191]    02BE: 33 C0                                 XOR AX, AX
+[ 192]    02C0: 8E C0                                 MOV ES, AX
+[ 193]    02C2: B0 47                                 MOV AL ,47H
+[ 194]    02C4: B4 04                                 MOV AH, 4
+[ 195]    02C6: F6 E4                                 MUL AH
+[ 196]    02C8: 8B D8                                 MOV BX, AX
+[ 197]    02CA: B8 98 03                              MOV AX, OFFSET FIVE_MS
+[ 198]    02CD: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 199]    02D0: 43                                    INC BX
+[ 200]    02D1: 43                                    INC BX
+[ 201]    02D2: B8 1E 00                              MOV AX, SEG FIVE_MS
+[ 202]    02D5: 26 89 07                              MOV WORD PTR ES:[BX], AX
+[ 203]    02D8: 33 C0                                 XOR AX, AX
+[ 204]        :                                       
+[ 205]    02DA: FB                                    STI
+[ 206]        :                                       
+[ 207]        :                                       
+[ 208]        :                                       ;-----------------------------------------------;
+[ 209]        :                                       ;                                               ;
+[ 210]        :                                       ;            DEFAULT OPERATION                  ;
+[ 211]        :                                       ;                                               ;
+[ 212]        :                                       ;-----------------------------------------------;
+[ 213]    02DB: B8 80 00                              MOV AX, 80H
+[ 214]    02DE: BA 36 00                              MOV DX, PCW1
+[ 215]    02E1: EF                                    OUT DX, AX
+[ 216]        :                                       
+[ 217]    02E2: B8 80 00                              MOV AX, 80H
+[ 218]    02E5: BA 56 00                              MOV DX, PCW2
+[ 219]    02E8: EF                                    OUT DX, AX
+[ 220]        :                                       
+[ 221]    02E9: E8 9A 03                              CALL LCDinit
+[ 222]    02EC: BE 00 00                              LEA SI, WELCOME
+[ 223]    02EF: E8 19 04                              CALL printString
+[ 224]        :                                       
+[ 225]        :                                       
+[ 226]    02F2:                                       HERE:
+[ 227]    02F2: EB FE                                 JMP HERE       ;WAITING FOR INPUT
+[ 228]        :                                       
+[ 229]        :                                       
+[ 230]        :                                       
+[ 231]        :                                       ;-----------------------------------------------;
+[ 232]        :                                       ;                                               ;
+[ 233]        :                                       ;              INTERRUPT REQUESTS               ;
+[ 234]        :                                       ;                                               ;
+[ 235]        :                                       ;-----------------------------------------------;
+[ 236]        :                                       
+[ 237]    02F4:                                       DISPLAY PROC NEAR
+[ 238]    02F4: B8 89 00                              MOV AX, 89H
+[ 239]    02F7: BA 56 00                              MOV DX, PCW2
+[ 240]    02FA: EF                                    OUT DX, AX
+[ 241]        :                                       
+[ 242]        :                                       
+[ 243]    02FB:                                       IR0:
+[ 244]    02FB: 83 FB 31                              CMP BX, '1'
+[ 245]    02FE: 75 0F                                 JNE IR1
+[ 246]    0300: B8 01 00                              MOV AX, 00000001B
+[ 247]    0303: BA 50 00                              MOV DX, PORTA2
+[ 248]    0306: EF                                    OUT DX, AX
+[ 249]    0307: B9 FF 00                              MOV CX, 00FFH
+[ 250]    030A: E8 0C 04                              CALL DELAY
+[ 251]    030D: EB 64                                 JMP END_DISPLAY
+[ 252]        :                                       
+[ 253]        :                                       
+[ 254]    030F:                                       IR1:
+[ 255]    030F: 83 FB 32                              CMP BX, '2'
+[ 256]    0312: 75 0F                                 JNE IR2
+[ 257]    0314: B8 02 00                              MOV AX, 00000010B
+[ 258]    0317: BA 50 00                              MOV DX, PORTA2
+[ 259]    031A: EF                                    OUT DX, AX
+[ 260]    031B: B9 FF 00                              MOV CX, 00FFH
+[ 261]    031E: E8 F8 03                              CALL DELAY
+[ 262]    0321: EB 50                                 JMP END_DISPLAY
+[ 263]        :                                       
+[ 264]    0323:                                       IR2:
+[ 265]    0323: 83 FB 33                              CMP BX, '3'
+[ 266]    0326: 75 0F                                 JNE IR3
+[ 267]    0328: B8 04 00                              MOV AX, 00000100B
+[ 268]    032B: BA 50 00                              MOV DX, PORTA2
+[ 269]    032E: EF                                    OUT DX, AX
+[ 270]    032F: B9 FF 00                              MOV CX, 00FFH
+[ 271]    0332: E8 E4 03                              CALL DELAY
+[ 272]    0335: EB 3C                                 JMP END_DISPLAY
+[ 273]        :                                       
+[ 274]    0337:                                       IR3:
+[ 275]    0337: 83 FB 34                              CMP BX, '4'
+[ 276]    033A: 75 0F                                 JNE IR4
+[ 277]    033C: B8 08 00                              MOV AX, 00001000B
+[ 278]    033F: BA 50 00                              MOV DX, PORTA2
+[ 279]    0342: EF                                    OUT DX, AX
+[ 280]    0343: B9 FF 00                              MOV CX, 00FFH
+[ 281]    0346: E8 D0 03                              CALL DELAY
+[ 282]    0349: EB 28                                 JMP END_DISPLAY
+[ 283]        :                                       
+[ 284]        :                                       
+[ 285]    034B:                                       IR4:
+[ 286]    034B: 83 FB 35                              CMP BX, '5'
+[ 287]    034E: 75 0F                                 JNE IR5
+[ 288]    0350: B8 10 00                              MOV AX, 00010000B
+[ 289]    0353: BA 50 00                              MOV DX, PORTA2
+[ 290]    0356: EF                                    OUT DX, AX
+[ 291]    0357: B9 FF 00                              MOV CX, 00FFH
+[ 292]    035A: E8 BC 03                              CALL DELAY
+[ 293]    035D: EB 14                                 JMP END_DISPLAY
+[ 294]        :                                       
+[ 295]        :                                       
+[ 296]    035F:                                       IR5:
+[ 297]    035F: 83 FB 36                              CMP BX, '6'
+[ 298]    0362: 75 0F                                 JNE END_DISPLAY
+[ 299]    0364: B8 20 00                              MOV AX, 00100000B
+[ 300]    0367: BA 50 00                              MOV DX, PORTA2
+[ 301]    036A: EF                                    OUT DX, AX
+[ 302]    036B: B9 FF 00                              MOV CX, 00FFH
+[ 303]    036E: E8 A8 03                              CALL DELAY
+[ 304]    0371: EB 00                                 JMP END_DISPLAY
+[ 305]        :                                       
+[ 306]        :                                       
+[ 307]        :                                       
+[ 308]        :                                       
+[ 309]    0373:                                       END_DISPLAY:
+[ 310]        :                                       
+[ 311]    0373: C3                                    RET
+[ 312]        :                                       
+[ 313]        :                                       DISPLAY ENDP
+[ 314]        :                                       
+[ 315]        :                                       
+[ 316]        :                                       ;-----------------------------------------------;
+[ 317]        :                                       ;                                               ;
+[ 318]        :                                       ;              KEYPAD MODULE                    ;
+[ 319]        :                                       ;                                               ;
+[ 320]        :                                       ;-----------------------------------------------;
+[ 321]        :                                       
+[ 322]    0374:                                       KEYPAD PROC NEAR
+[ 323]        :                                       
+[ 324]    0374: 50                                    PUSH AX
+[ 325]    0375: 53                                    PUSH BX
+[ 326]    0376: 51                                    PUSH CX
+[ 327]        :                                       
+[ 328]    0377: B8 89 00                              MOV AX, 89H
+[ 329]    037A: BA 56 00                              MOV DX, PCW2
+[ 330]    037D: EF                                    OUT DX, AX
+[ 331]        :                                       
+[ 332]    037E:                                       GOE:
+[ 333]    037E: E8 73 FF                              CALL DISPLAY
+[ 334]        :                                       
+[ 335]    0381:                                       COLUMN0:
+[ 336]    0381: B0 01                                 MOV AL, 00000001B
+[ 337]    0383: BA 52 00                              MOV DX,PORTB2
+[ 338]    0386: EE                                    OUT DX,AL
+[ 339]    0387: E4 54                                 IN AL, PORTC2
+[ 340]    0389: EB 00                                 JMP ROW00
+[ 341]        :                                       
+[ 342]        :                                       
+[ 343]    038B:                                       ROW00:
+[ 344]    038B: A2 02 01                              MOV KEY, AL
+[ 345]    038E: 80 3E 02 01 01                        CMP KEY, 00000001B
+[ 346]    0393: 75 05                                 JNE ROW10
+[ 347]    0395: BB 33 00                              MOV BX, '3'
+[ 348]    0398: EB E4                                 JMP GOE
+[ 349]        :                                       
+[ 350]        :                                       
+[ 351]    039A:                                       ROW10:
+[ 352]    039A: 80 3E 02 01 02                        CMP KEY, 00000010B
+[ 353]    039F: 75 05                                 JNE ROW20
+[ 354]    03A1: BB 36 00                              MOV BX, '6'
+[ 355]    03A4: EB D8                                 JMP GOE
+[ 356]        :                                       
+[ 357]        :                                       
+[ 358]    03A6:                                       ROW20:
+[ 359]    03A6: 80 3E 02 01 04                        CMP KEY, 00000100B
+[ 360]    03AB: 75 05                                 JNE ROW30
+[ 361]    03AD: BB 39 00                              MOV BX, '9'
+[ 362]    03B0: EB CC                                 JMP GOE
+[ 363]        :                                       
+[ 364]        :                                       
+[ 365]        :                                       
+[ 366]    03B2:                                       ROW30:
+[ 367]    03B2: 80 3E 02 01 08                        CMP KEY, 00001000B
+[ 368]    03B7: 75 05                                 JNE COLUMN1
+[ 369]    03B9: BB 23 00                              MOV BX, '#'
+[ 370]    03BC: EB C0                                 JMP GOE
+[ 371]        :                                       
+[ 372]        :                                       
+[ 373]    03BE:                                       COLUMN1:
+[ 374]    03BE: B0 02                                 MOV AL, 00000010B
+[ 375]    03C0: BA 52 00                              MOV DX,PORTB2
+[ 376]    03C3: EE                                    OUT DX,AL
+[ 377]    03C4: E4 54                                 IN AL, PORTC2
+[ 378]    03C6: EB 00                                 JMP ROW01
+[ 379]        :                                       
+[ 380]        :                                       
+[ 381]    03C8:                                       ROW01:
+[ 382]    03C8: A2 02 01                              MOV KEY, AL
+[ 383]    03CB: 80 3E 02 01 01                        CMP KEY, 00000001B
+[ 384]    03D0: 75 05                                 JNE ROW11
+[ 385]    03D2: BB 32 00                              MOV BX, '2'
+[ 386]    03D5: EB A7                                 JMP GOE
+[ 387]        :                                       
+[ 388]        :                                       
+[ 389]    03D7:                                       ROW11:
+[ 390]    03D7: 80 3E 02 01 02                        CMP KEY, 00000010B
+[ 391]    03DC: 75 05                                 JNE ROW21
+[ 392]    03DE: BB 35 00                              MOV BX, '5'
+[ 393]    03E1: EB 9B                                 JMP GOE
+[ 394]        :                                       
+[ 395]        :                                       
+[ 396]    03E3:                                       ROW21:
+[ 397]    03E3: 80 3E 02 01 04                        CMP KEY, 00000100B
+[ 398]    03E8: 75 05                                 JNE ROW31
+[ 399]    03EA: BB 38 00                              MOV BX, '8'
+[ 400]    03ED: EB 8F                                 JMP GOE
+[ 401]        :                                       
+[ 402]        :                                       
+[ 403]    03EF:                                       ROW31:
+[ 404]    03EF: 80 3E 02 01 08                        CMP KEY, 00001000B
+[ 405]    03F4: 75 05                                 JNE COLUMN2
+[ 406]    03F6: BB 30 00                              MOV BX, '0'
+[ 407]    03F9: EB 83                                 JMP GOE
+[ 408]        :                                       
+[ 409]        :                                       
+[ 410]    03FB:                                       COLUMN2:
+[ 411]    03FB: B0 04                                 MOV AL, 00000100B
+[ 412]    03FD: BA 52 00                              MOV DX,PORTB2
+[ 413]    0400: EE                                    OUT DX,AL
+[ 414]    0401: E4 54                                 IN AL, PORTC2
+[ 415]    0403: EB 00                                 JMP ROW02
+[ 416]        :                                       
+[ 417]        :                                       
+[ 418]    0405:                                       ROW02:
+[ 419]    0405: A2 02 01                              MOV KEY, AL
+[ 420]    0408: 80 3E 02 01 01                        CMP KEY, 00000001B
+[ 421]    040D: 75 06                                 JNE ROW12
+[ 422]    040F: BB 31 00                              MOV BX, '1'
+[ 423]    0412: E9 69 FF                              JMP GOE
+[ 424]        :                                       
+[ 425]        :                                       
+[ 426]    0415:                                       ROW12:
+[ 427]    0415: 80 3E 02 01 02                        CMP KEY, 00000010B
+[ 428]    041A: 75 06                                 JNE ROW22
+[ 429]    041C: BB 34 00                              MOV BX, '4'
+[ 430]    041F: E9 5C FF                              JMP GOE
+[ 431]        :                                       
+[ 432]        :                                       
+[ 433]    0422:                                       ROW22:
+[ 434]    0422: 80 3E 02 01 04                        CMP KEY, 00000100B
+[ 435]    0427: 75 06                                 JNE ROW32
+[ 436]    0429: BB 37 00                              MOV BX, '7'
+[ 437]    042C: E9 4F FF                              JMP GOE
+[ 438]        :                                       
+[ 439]        :                                       
+[ 440]    042F:                                       ROW32:
+[ 441]    042F: 80 3E 02 01 08                        CMP KEY, 00001000B
+[ 442]    0434: 74 03 E9 48 FF                        JNE COLUMN0
+[ 443]    0439: BB 2A 00                              MOV BX, '*'
+[ 444]    043C: E9 3F FF                              JMP GOE
+[ 445]        :                                       
+[ 446]        :                                       
+[ 447]    043F: 59                                    POP CX
+[ 448]    0440: 5B                                    POP BX
+[ 449]    0441: 58                                    POP AX
+[ 450]        :                                       
+[ 451]    0442: C3                                    RET
+[ 452]        :                                       KEYPAD ENDP
+[ 453]        :                                       
+[ 454]        :                                       
+[ 455]        :                                       ;--------------------------------------------------;
+[ 456]        :                                       ;                                                  ;
+[ 457]        :                                       ;              TIMER MODULES                       ;
+[ 458]        :                                       ;                                                  ;
+[ 459]        :                                       ;--------------------------------------------------;
+[ 460]    0443:                                       TIMER_SETUP_0 PROC NEAR
+[ 461]        :                                       
+[ 462]    0443: B0 70                                 MOV AL, TCWR0
+[ 463]    0445: E6 76                                 OUT TMCTR, AL
+[ 464]    0447: B0 E9                                 MOV AL, 0E9H
+[ 465]    0449: E6 72                                 OUT TM1, AL
+[ 466]    044B: B0 47                                 MOV AL, 47H
+[ 467]    044D: E6 72                                 OUT TM1, AL
+[ 468]    044F: C3                                    RET
+[ 469]        :                                       
+[ 470]        :                                       TIMER_SETUP_0 ENDP
+[ 471]        :                                       
+[ 472]    0450:                                       TIMER_SETUP_1 PROC NEAR
+[ 473]        :                                       
+[ 474]    0450: B0 70                                 MOV AL, TCWR0
+[ 475]    0452: E6 76                                 OUT TMCTR, AL
+[ 476]    0454: B0 38                                 MOV AL, 38H
+[ 477]    0456: E6 72                                 OUT TM1, AL
+[ 478]    0458: B0 4A                                 MOV AL, 4AH
+[ 479]    045A: E6 72                                 OUT TM1, AL
+[ 480]    045C: C3                                    RET
+[ 481]        :                                       
+[ 482]        :                                       TIMER_SETUP_1 ENDP
+[ 483]        :                                       
+[ 484]        :                                       
+[ 485]    045D:                                       TIMER_SETUP_2 PROC NEAR
+[ 486]        :                                       
+[ 487]    045D: B0 70                                 MOV AL, TCWR0
+[ 488]    045F: E6 76                                 OUT TMCTR, AL
+[ 489]    0461: B0 E3                                 MOV AL, 0E3H
+[ 490]    0463: E6 72                                 OUT TM1, AL
+[ 491]    0465: B0 48                                 MOV AL, 48H
+[ 492]    0467: E6 72                                 OUT TM1, AL
+[ 493]    0469: C3                                    RET
+[ 494]        :                                       
+[ 495]        :                                       TIMER_SETUP_2 ENDP
+[ 496]        :                                       
+[ 497]        :                                       
+[ 498]        :                                       
+[ 499]    046A:                                       TIMER_SETUP_3 PROC NEAR
+[ 500]        :                                       
+[ 501]    046A: B0 70                                 MOV AL, TCWR0
+[ 502]    046C: E6 76                                 OUT TMCTR, AL
+[ 503]    046E: B0 E9                                 MOV AL, 0E9H
+[ 504]    0470: E6 72                                 OUT TM1, AL
+[ 505]    0472: B0 47                                 MOV AL, 47H
+[ 506]    0474: E6 72                                 OUT TM1, AL
+[ 507]    0476: C3                                    RET
+[ 508]        :                                       
+[ 509]        :                                       TIMER_SETUP_3 ENDP
+[ 510]        :                                       
+[ 511]        :                                       
+[ 512]    0477:                                       TIMER_SETUP_4 PROC NEAR
+[ 513]        :                                       
+[ 514]    0477: B0 70                                 MOV AL, TCWR0
+[ 515]    0479: E6 76                                 OUT TMCTR, AL
+[ 516]    047B: B0 EF                                 MOV AL, 0EFH
+[ 517]    047D: E6 72                                 OUT TM1, AL
+[ 518]    047F: B0 46                                 MOV AL, 46H
+[ 519]    0481: E6 72                                 OUT TM1, AL
+[ 520]    0483: C3                                    RET
+[ 521]        :                                       
+[ 522]        :                                       TIMER_SETUP_4 ENDP
+[ 523]        :                                       
+[ 524]        :                                       
+[ 525]    0484:                                       TIMER_SETUP_5 PROC NEAR
+[ 526]        :                                       
+[ 527]    0484: B0 70                                 MOV AL, TCWR0
+[ 528]    0486: E6 76                                 OUT TMCTR, AL
+[ 529]    0488: B0 68                                 MOV AL, 68H
+[ 530]    048A: E6 72                                 OUT TM1, AL
+[ 531]    048C: B0 42                                 MOV AL, 42H
+[ 532]    048E: E6 72                                 OUT TM1, AL
+[ 533]    0490: C3                                    RET
+[ 534]        :                                       
+[ 535]        :                                       TIMER_SETUP_5 ENDP
+[ 536]        :                                       
+[ 537]        :                                       
+[ 538]        :                                       
+[ 539]        :                                       ;--------------------------------------------------;
+[ 540]        :                                       ;                                                  ;
+[ 541]        :                                       ;            SERVO INTERRUPT ROUTINES              ;
+[ 542]        :                                       ;                                                  ;
+[ 543]        :                                       ;--------------------------------------------------;
+[ 544]        :                                       
+[ 545]    0491:                                       ONE_MS:
+[ 546]        :                                       
+[ 547]    0491: FB                                    STI
+[ 548]        :                                       
+[ 549]    0492: B8 89 00                              MOV AX, 89H
+[ 550]    0495: BA 56 00                              MOV DX, PCW2
+[ 551]    0498: EF                                    OUT DX, AX
+[ 552]        :                                       
+[ 553]    0499: B8 00 00                              MOV AX, 00H
+[ 554]    049C: BA 50 00                              MOV DX, PORTA2
+[ 555]    049F: EF                                    OUT DX, AX
+[ 556]        :                                       
+[ 557]    04A0: B8 80 00                              MOV AX, 80H
+[ 558]    04A3: BA 36 00                              MOV DX, PCW1
+[ 559]    04A6: EF                                    OUT DX, AX
+[ 560]        :                                       
+[ 561]    04A7: BE 03 01                              LEA SI, OPTION_ONE
+[ 562]    04AA: E8 D9 01                              CALL LCDinit
+[ 563]    04AD: E8 5B 02                              CALL printString
+[ 564]        :                                       
+[ 565]    04B0: B9 00 FB                              MOV CX, 64256
+[ 566]    04B3: E8 63 02                              CALL DELAY
+[ 567]        :                                       
+[ 568]        :                                       ;LEA SI, CTRL
+[ 569]        :                                       ;CALL LCDinit
+[ 570]        :                                       ;CALL printString
+[ 571]        :                                       
+[ 572]    04B6:                                       LOOP_ONE:
+[ 573]    04B6: 33 C9                                 XOR CX, CX
+[ 574]    04B8: B9 4C 04                              MOV CX, 1100
+[ 575]    04BB: E8 5B 02                              CALL DELAY
+[ 576]    04BE: E8 8F FF                              CALL TIMER_SETUP_1
+[ 577]    04C1: EB F3                                 JMP LOOP_ONE
+[ 578]        :                                       
+[ 579]    04C3: CF                                    IRET
+[ 580]        :                                       ;------------------------------------------------
+[ 581]    04C4:                                       TWO_MS:
+[ 582]        :                                       
+[ 583]    04C4: FB                                    STI
+[ 584]        :                                       
+[ 585]    04C5: B8 89 00                              MOV AX, 89H
+[ 586]    04C8: BA 56 00                              MOV DX, PCW2
+[ 587]    04CB: EF                                    OUT DX, AX
+[ 588]        :                                       
+[ 589]    04CC: B8 00 00                              MOV AX, 00H
+[ 590]    04CF: BA 50 00                              MOV DX, PORTA2
+[ 591]    04D2: EF                                    OUT DX, AX
+[ 592]        :                                       
+[ 593]    04D3: B8 80 00                              MOV AX, 80H
+[ 594]    04D6: BA 36 00                              MOV DX, PCW1
+[ 595]    04D9: EF                                    OUT DX, AX
+[ 596]        :                                       
+[ 597]    04DA: BE 18 01                              LEA SI, OPTION_TWO
+[ 598]    04DD: E8 A6 01                              CALL LCDinit
+[ 599]    04E0: E8 28 02                              CALL printString
+[ 600]        :                                       
+[ 601]    04E3: B9 00 FB                              MOV CX, 64256
+[ 602]    04E6: E8 30 02                              CALL DELAY
+[ 603]        :                                       
+[ 604]    04E9: BE 1F 00                              LEA SI, CTRL
+[ 605]    04EC: E8 97 01                              CALL LCDinit
+[ 606]    04EF: E8 19 02                              CALL printString
+[ 607]        :                                       
+[ 608]    04F2:                                       LOOP_TWO:
+[ 609]    04F2: 33 C9                                 XOR CX, CX
+[ 610]    04F4: B9 4C 04                              MOV CX, 1100
+[ 611]    04F7: E8 1F 02                              CALL DELAY
+[ 612]    04FA: E8 60 FF                              CALL TIMER_SETUP_2
+[ 613]    04FD: EB F3                                 JMP LOOP_TWO
+[ 614]        :                                       
+[ 615]    04FF: CF                                    IRET
+[ 616]        :                                       ;------------------------------------------------
+[ 617]    0500:                                       THREE_MS:
+[ 618]        :                                       
+[ 619]    0500: FB                                    STI
+[ 620]        :                                       
+[ 621]    0501: B8 89 00                              MOV AX, 89H
+[ 622]    0504: BA 56 00                              MOV DX, PCW2
+[ 623]    0507: EF                                    OUT DX, AX
+[ 624]        :                                       
+[ 625]    0508: B8 00 00                              MOV AX, 00H
+[ 626]    050B: BA 50 00                              MOV DX, PORTA2
+[ 627]    050E: EF                                    OUT DX, AX
+[ 628]        :                                       
+[ 629]    050F: B8 80 00                              MOV AX, 80H
+[ 630]    0512: BA 36 00                              MOV DX, PCW1
+[ 631]    0515: EF                                    OUT DX, AX
+[ 632]        :                                       
+[ 633]    0516: BE 2D 01                              LEA SI, OPTION_THREE
+[ 634]    0519: E8 6A 01                              CALL LCDinit
+[ 635]    051C: E8 EC 01                              CALL printString
+[ 636]        :                                       
+[ 637]    051F: B9 00 FB                              MOV CX, 64256
+[ 638]    0522: E8 F4 01                              CALL DELAY
+[ 639]        :                                       
+[ 640]    0525: BE 1F 00                              LEA SI, CTRL
+[ 641]    0528: E8 5B 01                              CALL LCDinit
+[ 642]    052B: E8 DD 01                              CALL printString
+[ 643]        :                                       
+[ 644]    052E:                                       LOOP_THREE:
+[ 645]    052E: 33 C9                                 XOR CX, CX
+[ 646]    0530: B9 4C 04                              MOV CX, 1100
+[ 647]    0533: E8 E3 01                              CALL DELAY
+[ 648]    0536: E8 31 FF                              CALL TIMER_SETUP_3
+[ 649]    0539: EB F3                                 JMP LOOP_THREE
+[ 650]        :                                       
+[ 651]    053B: CF                                    IRET
+[ 652]        :                                       ;-----------------------------------------------------
+[ 653]    053C:                                       FOUR_MS:
+[ 654]        :                                       
+[ 655]    053C: FB                                    STI
+[ 656]        :                                       
+[ 657]    053D: B8 89 00                              MOV AX, 89H
+[ 658]    0540: BA 56 00                              MOV DX, PCW2
+[ 659]    0543: EF                                    OUT DX, AX
+[ 660]        :                                       
+[ 661]    0544: B8 00 00                              MOV AX, 00H
+[ 662]    0547: BA 50 00                              MOV DX, PORTA2
+[ 663]    054A: EF                                    OUT DX, AX
+[ 664]        :                                       
+[ 665]    054B: B8 80 00                              MOV AX, 80H
+[ 666]    054E: BA 36 00                              MOV DX, PCW1
+[ 667]    0551: EF                                    OUT DX, AX
+[ 668]        :                                       
+[ 669]    0552: BE 42 01                              LEA SI, OPTION_FOUR
+[ 670]    0555: E8 2E 01                              CALL LCDinit
+[ 671]    0558: E8 B0 01                              CALL printString
+[ 672]        :                                       
+[ 673]    055B: B9 00 FB                              MOV CX, 64256
+[ 674]    055E: E8 B8 01                              CALL DELAY
+[ 675]        :                                       
+[ 676]    0561: BE 1F 00                              LEA SI, CTRL
+[ 677]    0564: E8 1F 01                              CALL LCDinit
+[ 678]    0567: E8 A1 01                              CALL printString
+[ 679]        :                                       
+[ 680]    056A:                                       LOOP_FOUR:
+[ 681]    056A: 33 C9                                 XOR CX, CX
+[ 682]    056C: B9 4C 04                              MOV CX, 1100
+[ 683]    056F: E8 A7 01                              CALL DELAY
+[ 684]    0572: E8 02 FF                              CALL TIMER_SETUP_4
+[ 685]    0575: EB F3                                 JMP LOOP_FOUR
+[ 686]        :                                       
+[ 687]    0577: CF                                    IRET
+[ 688]        :                                       ;-----------------------------------------------------
+[ 689]        :                                       
+[ 690]    0578:                                       FIVE_MS:
+[ 691]        :                                       
+[ 692]    0578: FB                                    STI
+[ 693]        :                                       
+[ 694]    0579: B8 89 00                              MOV AX, 89H
+[ 695]    057C: BA 56 00                              MOV DX, PCW2
+[ 696]    057F: EF                                    OUT DX, AX
+[ 697]        :                                       
+[ 698]    0580: B8 00 00                              MOV AX, 00H
+[ 699]    0583: BA 50 00                              MOV DX, PORTA2
+[ 700]    0586: EF                                    OUT DX, AX
+[ 701]        :                                       
+[ 702]    0587: B8 80 00                              MOV AX, 80H
+[ 703]    058A: BA 36 00                              MOV DX, PCW1
+[ 704]    058D: EF                                    OUT DX, AX
+[ 705]        :                                       
+[ 706]    058E: BE 57 01                              LEA SI, OPTION_FIVE
+[ 707]    0591: E8 F2 00                              CALL LCDinit
+[ 708]    0594: E8 74 01                              CALL printString
+[ 709]        :                                       
+[ 710]    0597: B9 00 FB                              MOV CX, 64256
+[ 711]    059A: E8 7C 01                              CALL DELAY
+[ 712]        :                                       
+[ 713]    059D: BE 1F 00                              LEA SI, CTRL
+[ 714]    05A0: E8 E3 00                              CALL LCDinit
+[ 715]    05A3: E8 65 01                              CALL printString
+[ 716]        :                                       
+[ 717]    05A6:                                       LOOP_FIVE:
+[ 718]    05A6: 33 C9                                 XOR CX, CX
+[ 719]    05A8: B9 4C 04                              MOV CX, 1100
+[ 720]    05AB: E8 6B 01                              CALL DELAY
+[ 721]    05AE: E8 D3 FE                              CALL TIMER_SETUP_5
+[ 722]    05B1: EB F3                                 JMP LOOP_FIVE
+[ 723]        :                                       
+[ 724]    05B3: CF                                    IRET
+[ 725]        :                                       
+[ 726]        :                                       ;---------------------------------------------------------
+[ 727]        :                                       
+[ 728]    05B4:                                       START:
+[ 729]        :                                       
+[ 730]    05B4: FB                                    STI
+[ 731]        :                                       
+[ 732]    05B5: B8 89 00                              MOV AX, 89H
+[ 733]    05B8: BA 56 00                              MOV DX, PCW2
+[ 734]    05BB: EF                                    OUT DX, AX
+[ 735]        :                                       
+[ 736]    05BC: B8 00 00                              MOV AX, 00H
+[ 737]    05BF: BA 50 00                              MOV DX, PORTA2
+[ 738]    05C2: EF                                    OUT DX, AX
+[ 739]        :                                       
+[ 740]    05C3: B8 80 00                              MOV AX, 80H
+[ 741]    05C6: BA 36 00                              MOV DX, PCW1
+[ 742]    05C9: EF                                    OUT DX, AX
+[ 743]        :                                       
+[ 744]    05CA: BE 1F 00                              LEA SI, CTRL
+[ 745]    05CD: E8 B6 00                              CALL LCDinit
+[ 746]    05D0: E8 38 01                              CALL printString
+[ 747]        :                                       
+[ 748]        :                                       
+[ 749]    05D3: CF                                    IRET
+[ 750]        :                                       ;-----------------------------------------------------
+[ 751]        :                                       
+[ 752]    05D4:                                       INPUT:
+[ 753]        :                                       
+[ 754]    05D4: FB                                    STI
+[ 755]        :                                       
+[ 756]    05D5: B8 89 00                              MOV AX, 89H
+[ 757]    05D8: BA 56 00                              MOV DX, PCW2
+[ 758]    05DB: EF                                    OUT DX, AX
+[ 759]        :                                       
+[ 760]    05DC: B8 00 00                              MOV AX, 00H
+[ 761]    05DF: BA 50 00                              MOV DX, PORTA2
+[ 762]    05E2: EF                                    OUT DX, AX
+[ 763]        :                                       
+[ 764]    05E3: BE 3D 00                              LEA SI, STR_ONE
+[ 765]    05E6: E8 9D 00                              CALL LCDinit
+[ 766]    05E9: E8 1F 01                              CALL printString
+[ 767]        :                                       
+[ 768]    05EC: B9 00 FB                              MOV CX, 64256
+[ 769]    05EF: E8 27 01                              CALL DELAY
+[ 770]        :                                       
+[ 771]    05F2: BE 55 00                              LEA SI, STR_TWO
+[ 772]    05F5: E8 8E 00                              CALL LCDinit
+[ 773]    05F8: E8 10 01                              CALL printString
+[ 774]        :                                       
+[ 775]    05FB: B9 00 FB                              MOV CX, 64256
+[ 776]    05FE: E8 18 01                              CALL DELAY
+[ 777]        :                                       
+[ 778]    0601: BE 6D 00                              LEA SI, STR_THREE
+[ 779]    0604: E8 7F 00                              CALL LCDinit
+[ 780]    0607: E8 01 01                              CALL printString
+[ 781]        :                                       
+[ 782]    060A: B9 00 FB                              MOV CX, 64256
+[ 783]    060D: E8 09 01                              CALL DELAY
+[ 784]        :                                       
+[ 785]    0610: BE 85 00                              LEA SI, STR_FOUR
+[ 786]    0613: E8 70 00                              CALL LCDinit
+[ 787]    0616: E8 F2 00                              CALL printString
+[ 788]        :                                       
+[ 789]    0619: B9 00 FB                              MOV CX, 64256
+[ 790]    061C: E8 FA 00                              CALL DELAY
+[ 791]        :                                       
+[ 792]    061F: BE 9D 00                              LEA SI, STR_FIVE
+[ 793]    0622: E8 61 00                              CALL LCDinit
+[ 794]    0625: E8 E3 00                              CALL printString
+[ 795]        :                                       
+[ 796]    0628: B9 00 FB                              MOV CX, 64256
+[ 797]    062B: E8 EB 00                              CALL DELAY
+[ 798]        :                                       
+[ 799]    062E: BE B5 00                              LEA SI, NORMAL
+[ 800]    0631: E8 52 00                              CALL LCDinit
+[ 801]    0634: E8 D4 00                              CALL printString
+[ 802]        :                                       
+[ 803]    0637: B9 00 FB                              MOV CX, 64256
+[ 804]    063A: E8 DC 00                              CALL DELAY
+[ 805]        :                                       
+[ 806]    063D:                                       INP:
+[ 807]    063D: E8 34 FD                              CALL KEYPAD
+[ 808]    0640: EB FB                                 JMP INP
+[ 809]        :                                       
+[ 810]    0642: CF                                    IRET
+[ 811]        :                                       ;-----------------------------------------------------
+[ 812]    0643:                                       STOP:
+[ 813]        :                                       
+[ 814]    0643: FB                                    STI
+[ 815]        :                                       
+[ 816]    0644: B8 89 00                              MOV AX, 89H
+[ 817]    0647: BA 56 00                              MOV DX, PCW2
+[ 818]    064A: EF                                    OUT DX, AX
+[ 819]        :                                       
+[ 820]    064B: B8 00 00                              MOV AX, 00H
+[ 821]    064E: BA 50 00                              MOV DX, PORTA2
+[ 822]    0651: EF                                    OUT DX, AX
+[ 823]        :                                       
+[ 824]    0652: B8 80 00                              MOV AX, 80H
+[ 825]    0655: BA 36 00                              MOV DX, PCW1
+[ 826]    0658: EF                                    OUT DX, AX
+[ 827]        :                                       
+[ 828]    0659: BE CB 00                              LEA SI, INTERRUPT
+[ 829]    065C: E8 27 00                              CALL LCDinit
+[ 830]    065F: E8 A9 00                              CALL printString
+[ 831]        :                                       
+[ 832]    0662: B9 00 FB                              MOV CX, 64256
+[ 833]    0665: E8 B1 00                              CALL DELAY
+[ 834]        :                                       
+[ 835]    0668: B8 80 00                              MOV AX, 80H
+[ 836]    066B: BA 36 00                              MOV DX, PCW1
+[ 837]    066E: EF                                    OUT DX, AX
+[ 838]        :                                       
+[ 839]    066F: BE E8 00                              LEA SI, STR
+[ 840]    0672: E8 11 00                              CALL LCDinit
+[ 841]    0675: E8 93 00                              CALL printString
+[ 842]        :                                       
+[ 843]    0678:                                       STP:
+[ 844]    0678: 33 C9                                 XOR CX, CX
+[ 845]    067A: B9 4C 04                              MOV CX, 1100
+[ 846]    067D: E8 99 00                              CALL DELAY
+[ 847]    0680: E8 C0 FD                              CALL TIMER_SETUP_0
+[ 848]    0683: EB F3                                 JMP STP
+[ 849]        :                                       
+[ 850]    0685: CF                                    IRET
+[ 851]        :                                       
+[ 852]        :                                       
+[ 853]        :                                       ;-----------------------------------------------;
+[ 854]        :                                       ;                                               ;
+[ 855]        :                                       ;        LCD LIBRARY FUNCTIONS                  ;
+[ 856]        :                                       ;                                               ;
+[ 857]        :                                       ;-----------------------------------------------;
+[ 858]        :                                       
+[ 859]        :                                       ;LCD INITIALIZATION PROCEDURE
+[ 860]        :                                       
+[ 861]    0686:                                       LCDinit PROC NEAR
+[ 862]    0686: 50                                    PUSH AX
+[ 863]    0687: 52                                    PUSH DX
+[ 864]    0688: 51                                    PUSH CX
+[ 865]        :                                       
+[ 866]    0689: BA 32 00                              MOV  DX, PORTB1
+[ 867]    068C: B0 00                                 MOV  AL, 00H
+[ 868]    068E: EF                                    OUT  DX, AX
+[ 869]    068F: B9 FF 00                              MOV  CX, 00FFH
+[ 870]    0692: E8 84 00                              CALL DELAY
+[ 871]        :                                       
+[ 872]    0695: BA 30 00                              MOV  DX, PORTA1
+[ 873]    0698: B0 01                                 MOV  AL, 01H      ;CLEAR SCREEN COMMAND
+[ 874]    069A: EF                                    OUT  DX, AX
+[ 875]    069B: B9 FF 00                              MOV  CX, 00FFH
+[ 876]    069E: E8 78 00                              CALL DELAY
+[ 877]        :                                       
+[ 878]    06A1: BA 32 00                              MOV  DX, PORTB1
+[ 879]    06A4: B0 02                                 MOV  AL, 02H
+[ 880]    06A6: EF                                    OUT  DX, AX
+[ 881]    06A7: B9 FF 00                              MOV  CX, 00FFH
+[ 882]    06AA: E8 6C 00                              CALL DELAY
+[ 883]        :                                       
+[ 884]        :                                       ;-------------------------------------------------
+[ 885]        :                                       
+[ 886]    06AD: BA 32 00                              MOV  DX, PORTB1
+[ 887]    06B0: B0 00                                 MOV  AL, 00H
+[ 888]    06B2: EF                                    OUT  DX, AX
+[ 889]    06B3: B9 FF 00                              MOV  CX, 00FFH
+[ 890]    06B6: E8 60 00                              CALL DELAY
+[ 891]        :                                       
+[ 892]        :                                       
+[ 893]    06B9: BA 30 00                              MOV  DX, PORTA1
+[ 894]    06BC: B0 0E                                 MOV  AL, 0EH      ;DISPLAY ON, CURSOR ON COMMAND
+[ 895]    06BE: EF                                    OUT  DX, AX
+[ 896]    06BF: B9 FF 00                              MOV  CX, 00FFH
+[ 897]    06C2: E8 54 00                              CALL DELAY
+[ 898]        :                                       
+[ 899]    06C5: BA 32 00                              MOV  DX, PORTB1
+[ 900]    06C8: B0 02                                 MOV  AL, 02H
+[ 901]    06CA: EF                                    OUT  DX, AX
+[ 902]    06CB: B9 FF 00                              MOV  CX, 00FFH
+[ 903]    06CE: E8 48 00                              CALL DELAY
+[ 904]        :                                       
+[ 905]    06D1: 59                                    POP  CX
+[ 906]    06D2: 5A                                    POP  DX
+[ 907]    06D3: 58                                    POP  AX
+[ 908]    06D4: C3                                    RET
+[ 909]        :                                       LCDinit ENDP
+[ 910]        :                                       ;--------------------------------------------------------
+[ 911]        :                                       
+[ 912]        :                                       
+[ 913]        :                                       ;PRINT CHARACTER PROCEDURE
+[ 914]        :                                       
+[ 915]    06D5:                                       printChar PROC NEAR
+[ 916]    06D5: 50                                    PUSH AX
+[ 917]    06D6: 52                                    PUSH DX
+[ 918]    06D7: 51                                    PUSH CX
+[ 919]        :                                       
+[ 920]    06D8: BA 32 00                              MOV  DX, PORTB1
+[ 921]    06DB: B0 00                                 MOV  AL, 00H
+[ 922]    06DD: EF                                    OUT  DX, AX
+[ 923]    06DE: B9 FF 00                              MOV  CX, 00FFH
+[ 924]    06E1: E8 35 00                              CALL DELAY
+[ 925]        :                                       
+[ 926]    06E4: BA 30 00                              MOV  DX, PORTA1
+[ 927]    06E7: 8A C3                                 MOV  AL, BL
+[ 928]    06E9: EF                                    OUT  DX, AX
+[ 929]    06EA: B9 FF 00                              MOV  CX, 00FFH
+[ 930]    06ED: E8 29 00                              CALL DELAY
+[ 931]        :                                       
+[ 932]    06F0: BA 32 00                              MOV  DX, PORTB1
+[ 933]    06F3: B0 02                                 MOV  AL, 00000010B
+[ 934]    06F5: EF                                    OUT  DX, AX
+[ 935]    06F6: B9 FF 00                              MOV  CX, 00FFH
+[ 936]    06F9: E8 1D 00                              CALL DELAY
+[ 937]        :                                       
+[ 938]    06FC: B2 32                                 MOV  DL, PORTB1
+[ 939]    06FE: B0 01                                 MOV  AL, 00000001B
+[ 940]    0700: EF                                    OUT  DX, AX
+[ 941]    0701: B9 FF 00                              MOV  CX, 00FFH
+[ 942]    0704: E8 12 00                              CALL DELAY
+[ 943]        :                                       
+[ 944]    0707: 5A                                    POP  DX
+[ 945]    0708: 58                                    POP  AX
+[ 946]    0709: 59                                    POP  CX
+[ 947]    070A: C3                                    RET
+[ 948]        :                                       printChar ENDP
+[ 949]        :                                       
+[ 950]        :                                       ;--------------------------------------------------------
+[ 951]        :                                       
+[ 952]        :                                       
+[ 953]        :                                       ;PRINT STRING ON LCD SCREEN
+[ 954]        :                                       
+[ 955]    070B:                                       printString PROC NEAR
+[ 956]        :                                       
+[ 957]    070B:                                       printStr:
+[ 958]    070B: 8A 1C                                 MOV  BL, [SI]
+[ 959]    070D: 80 FB 24                              CMP  BL, '$'
+[ 960]    0710: 74 06                                 JE   endPrint
+[ 961]    0712: E8 C0 FF                              CALL printChar
+[ 962]    0715: 46                                    INC  SI
+[ 963]    0716: EB F3                                 JMP  printStr
+[ 964]    0718:                                       endPrint:
+[ 965]        :                                       
+[ 966]    0718: C3                                    RET
+[ 967]        :                                       printString ENDP
+[ 968]        :                                       ;--------------------------------------------------------
+[ 969]        :                                       
+[ 970]        :                                       ;--------------------------------------------------;
+[ 971]        :                                       ;                                                  ;
+[ 972]        :                                       ;          KEYPAD DELAY MODULE                     ;
+[ 973]        :                                       ;                                                  ;
+[ 974]        :                                       ;--------------------------------------------------;
+[ 975]        :                                       
+[ 976]    0719:                                       DELAY PROC NEAR
+[ 977]    0719: E2 FE                                 LOOP $         ;LOOP AT THIS STATEMENT UNTIL CX IS 0
+[ 978]    071B: C3                                    RET
+[ 979]        :                                       DELAY ENDP
+[ 980]        :                                       
+[ 981]        :                                       CODE ENDS
+[ 982]        :                                       END
+[ 983]        :                                       
+ 
+===================================================================================================
+ 
+EXE HEADER - bytes from 0000 to 01FF inclusive.
+
+0000: 4D      -   exe signature (M)
+0001: 5A      -   exe signature (Z)
+0002: 1C      -   bytes on last page (l.byte)
+0003: 01      -   bytes on last page (h.byte)
+0004: 05      -   512 byte pages in file (l.byte)
+0005: 00      -   512 byte pages in file (h.byte)
+0006: 09      -   relocations (l.byte)
+0007: 00      -   relocations (h.byte)
+0008: 20      -   paragraphs in header (l.byte)
+0009: 00      -   paragraphs in header (h.byte)
+000A: 00      -   minimum memory (l.byte)
+000B: 00      -   minimum memory (h.byte)
+000C: FF      -   maximum memory (l.byte)
+000D: FF      -   maximum memory (h.byte)
+000E: 00      -   SS - stack segment (l.byte)
+000F: 00      -   SS - stack segment (h.byte)
+0010: 64      -   SP - stack pointer (l.byte)
+0011: 00      -   SP - stack pointer (h.byte)
+0012: CA      -   check sum (l.byte)
+0013: 66      -   check sum (h.byte)
+0014: 00      -   IP - instruction pointer (l.byte)
+0015: 00      -   IP - instruction pointer (h.byte)
+0016: 1E      -   CS - code segment (l.byte)
+0017: 00      -   CS - code segment (h.byte)
+0018: 1E      -   relocation table adress (l.byte)
+0019: 00      -   relocation table adress (h.byte)
+001A: 00      -   overlay number (l.byte)
+001B: 00      -   overlay number (h.byte)
+001C: 01      -   signature (l.byte)
+001D: 00      -   signature (h.byte)
+001E: 01      -   relocation table - offset inside segment (l.byte)
+001F: 00      -   relocation table - offset inside segment (h.byte)
+0020: 1E      -   relocation table - segment anchor (l.byte)
+0021: 00      -   relocation table - segment anchor (h.byte)
+0022: 2F      -   relocation table - offset inside segment (l.byte)
+0023: 00      -   relocation table - offset inside segment (h.byte)
+0024: 1E      -   relocation table - segment anchor (l.byte)
+0025: 00      -   relocation table - segment anchor (h.byte)
+0026: 4B      -   relocation table - offset inside segment (l.byte)
+0027: 00      -   relocation table - offset inside segment (h.byte)
+0028: 1E      -   relocation table - segment anchor (l.byte)
+0029: 00      -   relocation table - segment anchor (h.byte)
+002A: 67      -   relocation table - offset inside segment (l.byte)
+002B: 00      -   relocation table - offset inside segment (h.byte)
+002C: 1E      -   relocation table - segment anchor (l.byte)
+002D: 00      -   relocation table - segment anchor (h.byte)
+002E: 83      -   relocation table - offset inside segment (l.byte)
+002F: 00      -   relocation table - offset inside segment (h.byte)
+0030: 1E      -   relocation table - segment anchor (l.byte)
+0031: 00      -   relocation table - segment anchor (h.byte)
+0032: 9F      -   relocation table - offset inside segment (l.byte)
+0033: 00      -   relocation table - offset inside segment (h.byte)
+0034: 1E      -   relocation table - segment anchor (l.byte)
+0035: 00      -   relocation table - segment anchor (h.byte)
+0036: BB      -   relocation table - offset inside segment (l.byte)
+0037: 00      -   relocation table - offset inside segment (h.byte)
+0038: 1E      -   relocation table - segment anchor (l.byte)
+0039: 00      -   relocation table - segment anchor (h.byte)
+003A: D7      -   relocation table - offset inside segment (l.byte)
+003B: 00      -   relocation table - offset inside segment (h.byte)
+003C: 1E      -   relocation table - segment anchor (l.byte)
+003D: 00      -   relocation table - segment anchor (h.byte)
+003E: F3      -   relocation table - offset inside segment (l.byte)
+003F: 00      -   relocation table - offset inside segment (h.byte)
+0040: 1E      -   relocation table - segment anchor (l.byte)
+0041: 00      -   relocation table - segment anchor (h.byte)
+0042 to 01FF  -   reserved relocation area  (00) 
+
+
+
+
+===================================================================================================

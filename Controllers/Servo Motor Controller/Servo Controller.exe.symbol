@@ -1,0 +1,81 @@
+< THE SYMBOL TABLE >  Servo Controller.exe  --  emu8086 assembler version: 4.08 
+===================================================================================================
+Name                     	Offset    	Size      	Type      	Segment   
+===================================================================================================
+STACK                    	00000     	-5        	SEGMENT   	(ITSELF)  
+DATA                     	00007     	-5        	SEGMENT   	(ITSELF)  
+WELCOME                  	00000     	1         	VAR       	DATA      
+CTRL                     	0001F     	1         	VAR       	DATA      
+STR_ONE                  	0003D     	1         	VAR       	DATA      
+STR_TWO                  	00055     	1         	VAR       	DATA      
+STR_THREE                	0006D     	1         	VAR       	DATA      
+STR_FOUR                 	00085     	1         	VAR       	DATA      
+STR_FIVE                 	0009D     	1         	VAR       	DATA      
+NORMAL                   	000B5     	1         	VAR       	DATA      
+INTERRUPT                	000CB     	1         	VAR       	DATA      
+STR                      	000E8     	1         	VAR       	DATA      
+KEY                      	00102     	1         	VAR       	DATA      
+OPTION_ONE               	00103     	1         	VAR       	DATA      
+OPTION_TWO               	00118     	1         	VAR       	DATA      
+OPTION_THREE             	0012D     	1         	VAR       	DATA      
+OPTION_FOUR              	00142     	1         	VAR       	DATA      
+OPTION_FIVE              	00157     	1         	VAR       	DATA      
+CODE                     	0001E     	-5        	SEGMENT   	(ITSELF)  
+MAIN                     	00000     	-1        	LABEL     	CODE      
+HERE                     	00112     	-1        	LABEL     	CODE      
+DISPLAY                  	00114     	-1        	NEAR      	CODE      
+IR0                      	0011B     	-1        	LABEL     	CODE      
+IR1                      	0012F     	-1        	LABEL     	CODE      
+IR2                      	00143     	-1        	LABEL     	CODE      
+IR3                      	00157     	-1        	LABEL     	CODE      
+IR4                      	0016B     	-1        	LABEL     	CODE      
+IR5                      	0017F     	-1        	LABEL     	CODE      
+END_DISPLAY              	00193     	-1        	LABEL     	CODE      
+KEYPAD                   	00194     	-1        	NEAR      	CODE      
+GOE                      	0019E     	-1        	LABEL     	CODE      
+COLUMN0                  	001A1     	-1        	LABEL     	CODE      
+ROW00                    	001AB     	-1        	LABEL     	CODE      
+ROW10                    	001BA     	-1        	LABEL     	CODE      
+ROW20                    	001C6     	-1        	LABEL     	CODE      
+ROW30                    	001D2     	-1        	LABEL     	CODE      
+COLUMN1                  	001DE     	-1        	LABEL     	CODE      
+ROW01                    	001E8     	-1        	LABEL     	CODE      
+ROW11                    	001F7     	-1        	LABEL     	CODE      
+ROW21                    	00203     	-1        	LABEL     	CODE      
+ROW31                    	0020F     	-1        	LABEL     	CODE      
+COLUMN2                  	0021B     	-1        	LABEL     	CODE      
+ROW02                    	00225     	-1        	LABEL     	CODE      
+ROW12                    	00235     	-1        	LABEL     	CODE      
+ROW22                    	00242     	-1        	LABEL     	CODE      
+ROW32                    	0024F     	-1        	LABEL     	CODE      
+TIMER_SETUP_0            	00263     	-1        	NEAR      	CODE      
+TIMER_SETUP_1            	00270     	-1        	NEAR      	CODE      
+TIMER_SETUP_2            	0027D     	-1        	NEAR      	CODE      
+TIMER_SETUP_3            	0028A     	-1        	NEAR      	CODE      
+TIMER_SETUP_4            	00297     	-1        	NEAR      	CODE      
+TIMER_SETUP_5            	002A4     	-1        	NEAR      	CODE      
+ONE_MS                   	002B1     	-1        	LABEL     	CODE      
+LOOP_ONE                 	002D6     	-1        	LABEL     	CODE      
+TWO_MS                   	002E4     	-1        	LABEL     	CODE      
+LOOP_TWO                 	00312     	-1        	LABEL     	CODE      
+THREE_MS                 	00320     	-1        	LABEL     	CODE      
+LOOP_THREE               	0034E     	-1        	LABEL     	CODE      
+FOUR_MS                  	0035C     	-1        	LABEL     	CODE      
+LOOP_FOUR                	0038A     	-1        	LABEL     	CODE      
+FIVE_MS                  	00398     	-1        	LABEL     	CODE      
+LOOP_FIVE                	003C6     	-1        	LABEL     	CODE      
+START                    	003D4     	-1        	LABEL     	CODE      
+INPUT                    	003F4     	-1        	LABEL     	CODE      
+INP                      	0045D     	-1        	LABEL     	CODE      
+STOP                     	00463     	-1        	LABEL     	CODE      
+STP                      	00498     	-1        	LABEL     	CODE      
+LCDINIT                  	004A6     	-1        	NEAR      	CODE      
+PRINTCHAR                	004F5     	-1        	NEAR      	CODE      
+PRINTSTRING              	0052B     	-1        	NEAR      	CODE      
+PRINTSTR                 	0052B     	-1        	LABEL     	CODE      
+ENDPRINT                 	00538     	-1        	LABEL     	CODE      
+DELAY                    	00539     	-1        	NEAR      	CODE      
+===================================================================================================
+[ 1/3/2022  --  9:20:18 AM ] 
+< END >
+ 
